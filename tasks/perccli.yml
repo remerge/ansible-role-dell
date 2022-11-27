@@ -1,0 +1,30 @@
+---
+- name: Download perccli
+  ansible.builtin.get_url:
+    url: "{{ perccli_url }}"
+    dest: "/tmp/{{ perccli_archive }}.tar.gz"
+    checksum: "{{ perccli_checksum }}"
+    mode: 0644
+  register: perccli_file
+
+- name: Extract perccli
+  ansible.builtin.unarchive:
+    src: "{{ perccli_file.dest }}"
+    dest: /tmp/
+    creates: "/tmp/{{ perccli_rpm }}"
+    remote_src: true
+    mode: 0700
+
+- name: Install perccli
+  ansible.builtin.dnf:
+    name: "/tmp/{{ perccli_rpm }}"
+    disable_gpg_check: true
+    state: present
+
+- name: Link perccli
+  ansible.builtin.file:
+    src: /opt/MegaRAID/perccli/perccli64
+    dest: /usr/bin/perccli
+    owner: root
+    group: root
+    state: link

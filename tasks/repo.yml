@@ -1,0 +1,42 @@
+---
+- name: Add Dell OS independent repository
+  ansible.builtin.yum_repository:
+    file: dell-system-update
+    name: dell-system-update_independent
+    description: Dell OS independent
+    baseurl: "{{ dell_repo_base_url }}/hardware/dsu/os_independent/"
+    gpgcheck: true
+    gpgkey: "{{ dell_gpg_key_urls }}"
+    exclude: dell-system-update*.i386
+
+- name: Add Dell OS dependent repository
+  ansible.builtin.yum_repository:
+    file: dell-system-update
+    name: dell-system-update_dependent
+    description: Dell OS dependent
+    mirrorlist: "{{ dell_repo_base_url }}/hardware/dsu/mirrors.cgi?osname=el$releasever&basearch=$basearch&native=1"
+    gpgcheck: true
+    gpgkey: "{{ dell_gpg_key_urls }}"
+
+- name: Create /usr/libexec/dell_dup
+  ansible.builtin.file:
+    path: /usr/libexec/dell_dup
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Fetch Dell GPG keyfiles
+  ansible.builtin.get_url:
+    url: "{{ item }}"
+    dest: /usr/libexec/dell_dup
+    owner: root
+    group: root
+    mode: 0644
+  loop: "{{ dell_gpg_key_urls }}"
+
+- name: Import Dell GPG keys
+  ansible.builtin.rpm_key:
+    key: "{{ item }}"
+    state: present
+  loop: "{{ dell_gpg_key_urls }}"
