@@ -5,6 +5,11 @@
 - name: Import repo.yml
   ansible.builtin.import_tasks: repo.yml
 
+- name: Install chkconfig for EL9 compatibility
+  ansible.builtin.package:
+    name: chkconfig
+    state: present
+
 - name: Install dell-system-update
   ansible.builtin.package:
     name: dell-system-update
