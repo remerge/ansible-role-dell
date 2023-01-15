@@ -7,6 +7,7 @@ perccli_url: "https://dl.dell.com/FOLDER09074160M/1/{{ perccli_archive }}.tar.gz
 dell_repo_base_url: "https://linux.dell.com/repo"
 dell_gpg_key_urls:
   - "{{ dell_repo_base_url }}/pgp_pubkeys/0x1285491434D8786F.asc"
+  - "{{ dell_repo_base_url }}/pgp_pubkeys/0x274E9C32857A9594.asc"
   - "{{ dell_repo_base_url }}/pgp_pubkeys/0x3CA66B4946770C59.asc"
   - "{{ dell_repo_base_url }}/pgp_pubkeys/0x756ba70b1019ced6.asc"
   - "{{ dell_repo_base_url }}/pgp_pubkeys/0xca77951d23b66a9d.asc"
