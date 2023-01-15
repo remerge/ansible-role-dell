@@ -1,17 +1,8 @@
 ---
 galaxy_info:
-  author: remerge
   role_name: dell
   description: Install and configure Dell system update and packages with Ansible.
   license: apache-2.0
+  author: remerge
   company: remerge.io
-  min_ansible_version: "2.10"
-
-  platforms:
-    - name: EL
-      versions:
-        - "8"
-        - "9"
-
-  galaxy_tags:
-    - dell
+  min_ansible_version: "2.14"
