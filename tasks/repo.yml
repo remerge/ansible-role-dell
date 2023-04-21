@@ -4,7 +4,7 @@
     file: dell-system-update
     name: dell-system-update_independent
     description: Dell OS independent
-    baseurl: "{{ dell_repo_base_url }}/hardware/dsu/os_independent/"
+    baseurl: "{{ dell_repo_base_url }}/hardware/{{ dell_repo_version }}/os_independent/"
     gpgcheck: true
     gpgkey: "{{ dell_gpg_key_urls }}"
     exclude: dell-system-update*.i386
@@ -14,7 +14,7 @@
     file: dell-system-update
     name: dell-system-update_dependent
     description: Dell OS dependent
-    mirrorlist: "{{ dell_repo_base_url }}/hardware/dsu/mirrors.cgi?osname=el$releasever&basearch=$basearch&native=1"
+    mirrorlist: "{{ dell_repo_base_url }}/hardware/{{ dell_repo_version }}/mirrors.cgi?osname=el$releasever&basearch=$basearch&native=1"
     gpgcheck: true
     gpgkey: "{{ dell_gpg_key_urls }}"
 
