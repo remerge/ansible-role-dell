@@ -46,7 +46,7 @@ repos:
 
   # https://github.com/adrienverge/yamllint/tags
   - repo: https://github.com/adrienverge/yamllint
-    rev: "v1.29.0"
+    rev: "v1.31.0"
     hooks:
       - id: yamllint
         entry: yamllint --strict
@@ -73,7 +73,7 @@ repos:
 
   # https://github.com/ansible/ansible-lint/tags
   - repo: https://github.com/ansible/ansible-lint
-    rev: "v6.14.6"
+    rev: "v6.15.0"
     hooks:
       - id: ansible-lint
         name: ansible-lint
@@ -95,7 +95,7 @@ repos:
 
   # https://github.com/bridgecrewio/checkov/tags
   - repo: https://github.com/bridgecrewio/checkov
-    rev: "2.3.165"
+    rev: "2.3.194"
     hooks:
       - id: checkov
         name: checkov
@@ -103,7 +103,7 @@ repos:
 
   # https://github.com/jorisroovers/gitlint/tags
   - repo: https://github.com/jorisroovers/gitlint
-    rev: "v0.18.0"
+    rev: "v0.19.1"
     hooks:
       - id: gitlint
 
