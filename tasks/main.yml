@@ -1,7 +1,4 @@
 ---
-- name: Import perccli.yml
-  ansible.builtin.import_tasks: perccli.yml
-
 - name: Import repo.yml
   ansible.builtin.import_tasks: repo.yml
 
@@ -34,3 +31,6 @@
     - dsm_sa_datamgrd.service
     - dsm_sa_eventmgrd.service
     - instsvcdrv.service
+
+- name: Import perccli.yml
+  ansible.builtin.import_tasks: perccli.yml
