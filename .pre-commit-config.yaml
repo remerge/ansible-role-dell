@@ -95,7 +95,7 @@ repos:
 
   # https://github.com/bridgecrewio/checkov/tags
   - repo: https://github.com/bridgecrewio/checkov
-    rev: "2.3.194"
+    rev: "2.3.224"
     hooks:
       - id: checkov
         name: checkov
