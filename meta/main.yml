@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   role_name: dell
-  description: Install and configure Dell system update and packages with Ansible.
+  description: Ansible Role for Dell
   license: apache-2.0
   author: remerge
   company: remerge.io
