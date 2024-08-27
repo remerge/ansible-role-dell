@@ -1,6 +1,6 @@
 ---
 perccli_rpm: "perccli-007.2616.0000.0000-1.noarch.rpm"
-perccli_archive: "PERCCLI_7.2616.0"
+perccli_archive: "PERCCLI_7.2616.0_Linux"
 perccli_checksum: "sha256:74ab1e99b9d8bcf92077cc9913574ca244a3a552bc0c5e77c416c569eebc4c46"
 perccli_url: "https://dl.dell.com/FOLDER11213122M/1/{{ perccli_archive }}.tar.gz"
 
