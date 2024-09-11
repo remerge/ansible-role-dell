@@ -1,0 +1,18 @@
+---
+- name: Remove Dell Open Manage Server Administrator
+  ansible.builtin.package:
+    name: "srvadmin-*"
+    state: absent
+
+- name: Install iDRAC Service Module
+  ansible.builtin.dnf:
+    state: present
+    name:
+      - https://assets.remerge.io/distfiles/dcism-osc-7.3.1.0-153.rpm
+      - https://assets.remerge.io/distfiles/dcism-5.3.1.0-3503.el9.x86_64.rpm
+
+- name: Start iDRAC Service Module
+  ansible.builtin.systemd:
+    name: dcismeng
+    state: started
+    enabled: yes

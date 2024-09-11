@@ -12,25 +12,8 @@
     name: dell-system-update
     state: present
 
-- name: Install Dell Open Manage Server Administrator
-  ansible.builtin.package:
-    state: present
-    name:
-      - srvadmin-base
-      - srvadmin-idrac
-      - srvadmin-server-cli
-      - srvadmin-storageservices-cli
-
-- name: Start Dell Open Manage Server Administrator
-  ansible.builtin.systemd:
-    name: "{{ item }}"
-    state: started
-    enabled: true
-  loop:
-    - dsm_om_shrsvc.service
-    - dsm_sa_datamgrd.service
-    - dsm_sa_eventmgrd.service
-    - instsvcdrv.service
+- name: Import ism.yml
+  ansible.builtin.import_tasks: ism.yml
 
 - name: Import perccli.yml
   ansible.builtin.import_tasks: perccli.yml
