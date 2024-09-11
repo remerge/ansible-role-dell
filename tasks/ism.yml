@@ -15,4 +15,4 @@
   ansible.builtin.systemd:
     name: dcismeng
     state: started
-    enabled: yes
+    enabled: true
