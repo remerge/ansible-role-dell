@@ -4,7 +4,7 @@
     url: "{{ perccli_url }}"
     dest: "/tmp/{{ perccli_archive }}.tar.gz"
     checksum: "{{ perccli_checksum }}"
-    mode: 0644
+    mode: "0644"
   register: perccli_file
 
 - name: Extract perccli
@@ -13,7 +13,7 @@
     dest: /tmp/
     creates: "/tmp/{{ perccli_rpm }}"
     remote_src: true
-    mode: 0700
+    mode: "0700"
 
 - name: Install perccli
   ansible.builtin.dnf:
