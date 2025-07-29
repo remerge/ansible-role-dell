@@ -24,7 +24,7 @@
     state: directory
     owner: root
     group: root
-    mode: 0755
+    mode: "0755"
 
 - name: Fetch Dell GPG keyfiles
   ansible.builtin.get_url:
@@ -32,7 +32,7 @@
     dest: /usr/libexec/dell_dup
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   loop: "{{ dell_gpg_key_urls }}"
 
 - name: Import Dell GPG keys
