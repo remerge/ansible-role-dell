@@ -1,11 +1,12 @@
 ---
-perccli_rpm: "perccli-007.2616.0000.0000-1.noarch.rpm"
-perccli_archive: "PERCCLI_7.2616.0_Linux"
-perccli_checksum: "sha256:74ab1e99b9d8bcf92077cc9913574ca244a3a552bc0c5e77c416c569eebc4c46"
-perccli_url: "https://dl.dell.com/FOLDER11213122M/1/{{ perccli_archive }}.tar.gz"
+# https://linux.dell.com/repo/hardware/
+# The official mirror is often slow and unreliable
+dell_repo_base_url: "https://ftp.uni-hannover.de/dell"
+dell_repo_version: "DSU_25.08.11"
 
-dell_repo_base_url: "https://linux.dell.com/repo"
+# https://linux.dell.com/repo/pgp_pubkeys/
 dell_gpg_key_urls:
+  - "{{ dell_repo_base_url }}/pgp_pubkeys/0x076B95DB2FFC7F4A.asc"
   - "{{ dell_repo_base_url }}/pgp_pubkeys/0x1285491434D8786F.asc"
   - "{{ dell_repo_base_url }}/pgp_pubkeys/0x274E9C32857A9594.asc"
   - "{{ dell_repo_base_url }}/pgp_pubkeys/0x3CA66B4946770C59.asc"

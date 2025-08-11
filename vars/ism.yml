@@ -1,0 +1,5 @@
+---
+# https://linux.dell.com/repo/hardware/dsu/os_independent/noarch/
+systems_management_version: "258RC_LN64_5.4.0.0_A00-5.4.0.0-25.07.28"
+dcism_osc_version: "7.4.0.0-165"
+dcism_version: "5.4.0.0-3646"
