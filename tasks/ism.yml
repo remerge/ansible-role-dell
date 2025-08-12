@@ -6,7 +6,7 @@
 
 - name: Install Dell Systems-Management Application
   ansible.builtin.dnf:
-    name: "Systems-Management_Application_{{ systems_management_version }}.noarch"
+    name: "Systems-Management_Application_{{ systems_management_version }}"
     state: present
 
 - name: Extract Dell Systems-Management Application

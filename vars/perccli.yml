@@ -1,6 +1,0 @@
----
-# https://www.dell.com/support/search/en-us?lwp=rt#q=linux%20perccli%20utility&sort=date%20descending&f:iuxType=[Drivers%20%26%20Downloads]&f:langFacet=[en]
-perccli_rpm: "perccli-007.3208.0000.0000-1.noarch.rpm"
-perccli_archive: "PERCCLI_7.3208.0_Linux_A01"
-perccli_checksum: "sha256:d4d935a59fbb99614ad890f1a7bf3c6f31252cfb1fc66a574a0a71d3a1c5829f"
-perccli_url: "https://dl.dell.com/FOLDER13074167M/1/{{ perccli_archive }}.tar.gz"
