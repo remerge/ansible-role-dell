@@ -7,10 +7,12 @@
     name: chkconfig
     state: present
 
-- name: Install dell-system-update
-  ansible.builtin.package:
-    name: dell-system-update
-    state: present
+- name: Update dell-system-update
+  ansible.builtin.dnf:
+    state: latest # noqa package-latest
+    name:
+      - dell-system-update
+      - dsucatalog
 
 - name: Import ism.yml
   ansible.builtin.import_tasks: ism.yml

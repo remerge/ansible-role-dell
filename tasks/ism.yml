@@ -4,12 +4,25 @@
     name: "srvadmin-*"
     state: absent
 
-- name: Install iDRAC Service Module
+- name: Install Dell Systems-Management Application
   ansible.builtin.dnf:
+    name: "Systems-Management_Application_{{ systems_management_version }}"
     state: present
-    name:
-      - https://assets.remerge.io/distfiles/dcism-osc-7.3.1.0-153.rpm
-      - https://assets.remerge.io/distfiles/dcism-5.3.1.0-3503.el9.x86_64.rpm
+
+- name: Extract Dell Systems-Management Application
+  ansible.builtin.command:
+    cmd: "/usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}.BIN --extract Systems-Management_Application_{{ systems_management_version }}"
+    creates: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}
+
+- name: Install dcism-osc RPM package
+  ansible.builtin.dnf:
+    name: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}/dcism-osc-{{ dcism_osc_version }}.rpm
+    state: present
+
+- name: Install dcism RPM package
+  ansible.builtin.dnf:
+    name: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}/dcism-{{ dcism_version }}.el9.x86_64.rpm
+    state: present
 
 - name: Start iDRAC Service Module
   ansible.builtin.systemd:

@@ -17,7 +17,7 @@
 
 - name: Install perccli
   ansible.builtin.dnf:
-    name: "/tmp/{{ perccli_rpm }}"
+    name: "/tmp/{{ perccli_archive }}/Linux/{{ perccli_rpm }}"
     disable_gpg_check: true
     state: present
 
