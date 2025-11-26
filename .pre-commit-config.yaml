@@ -99,7 +99,7 @@ repos:
 
   # https://github.com/ansible/ansible-lint/tags
   - repo: https://github.com/ansible/ansible-lint
-    rev: "v25.11.0"
+    rev: "v25.11.1"
     hooks:
       - id: ansible-lint
         name: ansible-lint
