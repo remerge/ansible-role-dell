@@ -12,6 +12,7 @@
 - name: Extract Dell Systems-Management Application
   ansible.builtin.command:
     cmd: "/usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}.BIN --extract Systems-Management_Application_{{ systems_management_version }}"
+    chdir: /usr/libexec/dell_dup
     creates: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}
 
 - name: Install dcism-osc RPM package
