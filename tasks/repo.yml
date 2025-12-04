@@ -1,4 +1,16 @@
 ---
+- name: Download Dell repository certificate
+  ansible.builtin.get_url:
+    url: https://cacerts.digicert.com/DigiCertGlobalG2TLSRSASHA2562020CA1-1.crt.pem
+    dest: /etc/pki/ca-trust/source/anchors
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Update CA Trust
+
+- name: Run handlers if necessary
+  ansible.builtin.meta: flush_handlers
+
 - name: Add Dell OS independent repository
   ansible.builtin.yum_repository:
     file: dell-system-update
