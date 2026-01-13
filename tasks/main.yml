@@ -8,6 +8,7 @@
     name:
       - dell-system-update
       - dsucatalog
+      - srvadmin-idracadm7
 
 - name: Import ism.yml
   ansible.builtin.import_tasks: ism.yml

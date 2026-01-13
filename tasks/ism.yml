@@ -1,9 +1,4 @@
 ---
-- name: Remove Dell Open Manage Server Administrator
-  ansible.builtin.package:
-    name: "srvadmin-*"
-    state: absent
-
 - name: Install Dell Systems-Management Application
   ansible.builtin.dnf:
     name: "Systems-Management_Application_{{ systems_management_version }}"
