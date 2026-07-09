@@ -1,0 +1,36 @@
+---
+# The dsu tool (Dell System Update) verifies the catalogs it downloads against
+# Dell's public keys, which it reads as files from its working directory
+# /usr/libexec/dell_dup (the path is compiled into the binary; `dsu
+# --import-public-key` reads the 0x*.asc files there). Stage them from the local
+# distribution-gpg-keys package so verification succeeds without reaching
+# linux.dell.com (down) or the GWDG mirror (does not host the pubkeys).
+#
+# This must run *after* "Update dell-system-update": upgrading that package runs
+# `rm -rf /usr/libexec/dell_dup` in its RPM scriptlet, which would otherwise wipe
+# freshly staged keys.
+- name: Ensure Dell DUP working directory exists
+  ansible.builtin.file:
+    path: /usr/libexec/dell_dup
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Find Dell public key files
+  ansible.builtin.find:
+    paths: /usr/share/distribution-gpg-keys/dell
+    patterns: "0x*.asc"
+  register: dell_dsu_key_files
+
+- name: Stage Dell public keys for dsu signature verification
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "/usr/libexec/dell_dup/{{ item.path | basename }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ dell_dsu_key_files.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
