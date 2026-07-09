@@ -36,7 +36,27 @@
     group: root
     mode: "0755"
 
-- name: Install GPG Keys
+- name: Install Dell GPG key files
   ansible.builtin.package:
     name: distribution-gpg-keys
     state: present
+
+# The GWDG mirror does not host Dell's pgp_pubkeys/, and distribution-gpg-keys
+# only drops the key files on disk without importing them. Import them into the
+# RPM keyring here so the gpgcheck-enabled Dell repos can verify packages
+# without depending on linux.dell.com being reachable at provision time.
+- name: Find Dell GPG key files
+  ansible.builtin.find:
+    paths: /usr/share/distribution-gpg-keys/dell
+    patterns:
+      - "*.asc"
+      - "*.key"
+  register: dell_gpg_key_files
+
+- name: Import Dell GPG keys
+  ansible.builtin.rpm_key:
+    key: "{{ item.path }}"
+    state: present
+  loop: "{{ dell_gpg_key_files.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
