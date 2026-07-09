@@ -3,22 +3,34 @@
   ansible.builtin.dnf:
     name: "Systems-Management_Application_{{ systems_management_version }}"
     state: present
+  register: dell_ism_dup
 
-- name: Extract Dell Systems-Management Application
-  ansible.builtin.command:
-    cmd: "/usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}.BIN --extract Systems-Management_Application_{{ systems_management_version }}"
-    chdir: /usr/libexec/dell_dup
-    creates: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}
+# The DUP's self-extracting .BIN (and the whole /usr/libexec/dell_dup tree it
+# owns) is removed once the packages have been extracted and installed, yet the
+# DUP RPM stays registered as installed -- so dnf will not restore the .BIN on a
+# re-run. Only extract and install the inner RPMs when the DUP RPM was actually
+# just (re)installed, which is the only moment the .BIN exists on disk. This is
+# idempotent for the three real states: fresh install (changed), unchanged
+# re-run (skipped), and version bump (new package name -> changed). A handler is
+# unsuitable here because these steps must run in sequence, mid-play.
+- name: Extract and install Dell iSM from the freshly installed DUP # noqa: no-handler
+  when: dell_ism_dup is changed
+  block:
+    - name: Extract Dell Systems-Management Application
+      ansible.builtin.command:
+        cmd: "/usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}.BIN --extract Systems-Management_Application_{{ systems_management_version }}"
+        chdir: /usr/libexec/dell_dup
+        creates: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}
 
-- name: Install dcism-osc RPM package
-  ansible.builtin.dnf:
-    name: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}/dcism-osc-{{ dcism_osc_version }}.rpm
-    state: present
+    - name: Install dcism-osc RPM package
+      ansible.builtin.dnf:
+        name: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}/dcism-osc-{{ dcism_osc_version }}.rpm
+        state: present
 
-- name: Install dcism RPM package
-  ansible.builtin.dnf:
-    name: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}/dcism-{{ dcism_version }}.el9.x86_64.rpm
-    state: present
+    - name: Install dcism RPM package
+      ansible.builtin.dnf:
+        name: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}/dcism-{{ dcism_version }}.el9.x86_64.rpm
+        state: present
 
 - name: Start iDRAC Service Module
   ansible.builtin.systemd:
