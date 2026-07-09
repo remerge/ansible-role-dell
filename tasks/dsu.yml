@@ -1,14 +1,23 @@
 ---
-# The dsu tool (Dell System Update) verifies the catalogs it downloads against
-# Dell's public keys, which it reads as files from its working directory
-# /usr/libexec/dell_dup (the path is compiled into the binary; `dsu
-# --import-public-key` reads the 0x*.asc files there). Stage them from the local
-# distribution-gpg-keys package so verification succeeds without reaching
-# linux.dell.com (down) or the GWDG mirror (does not host the pubkeys).
+# Install the Dell System Update packages and stage the public keys dsu needs.
 #
-# This must run *after* "Update dell-system-update": upgrading that package runs
-# `rm -rf /usr/libexec/dell_dup` in its RPM scriptlet, which would otherwise wipe
-# freshly staged keys.
+# `dsu --import-public-key` reads Dell's public keys as *files* from its working
+# directory /usr/libexec/dell_dup (the path is compiled into the binary) and uses
+# them to verify the catalogs it downloads. Neither linux.dell.com (down) nor the
+# GWDG mirror serves these pubkeys, so stage them from the local
+# distribution-gpg-keys package.
+#
+# Ordering matters: upgrading dell-system-update runs `rm -rf /usr/libexec/dell_dup`
+# in its RPM scriptlet, so the keys are staged *after* that upgrade, here in this
+# file, and this file runs before ism.yml.
+- name: Update dell-system-update
+  ansible.builtin.dnf:
+    state: latest # noqa package-latest
+    name:
+      - dell-system-update
+      - dsucatalog
+      - srvadmin-idracadm7
+
 - name: Ensure Dell DUP working directory exists
   ansible.builtin.file:
     path: /usr/libexec/dell_dup
