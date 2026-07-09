@@ -1,0 +1,45 @@
+---
+# Install the Dell System Update packages and stage the public keys dsu needs.
+#
+# `dsu --import-public-key` reads Dell's public keys as *files* from its working
+# directory /usr/libexec/dell_dup (the path is compiled into the binary) and uses
+# them to verify the catalogs it downloads. Neither linux.dell.com (down) nor the
+# GWDG mirror serves these pubkeys, so stage them from the local
+# distribution-gpg-keys package.
+#
+# Ordering matters: upgrading dell-system-update runs `rm -rf /usr/libexec/dell_dup`
+# in its RPM scriptlet, so the keys are staged *after* that upgrade, here in this
+# file, and this file runs before ism.yml.
+- name: Update dell-system-update
+  ansible.builtin.dnf:
+    state: latest # noqa package-latest
+    name:
+      - dell-system-update
+      - dsucatalog
+      - srvadmin-idracadm7
+
+- name: Ensure Dell DUP working directory exists
+  ansible.builtin.file:
+    path: /usr/libexec/dell_dup
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Find Dell public key files
+  ansible.builtin.find:
+    paths: /usr/share/distribution-gpg-keys/dell
+    patterns: "0x*.asc"
+  register: dell_dsu_key_files
+
+- name: Stage Dell public keys for dsu signature verification
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "/usr/libexec/dell_dup/{{ item.path | basename }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ dell_dsu_key_files.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"

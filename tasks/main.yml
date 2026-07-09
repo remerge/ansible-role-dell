@@ -2,13 +2,8 @@
 - name: Import repo.yml
   ansible.builtin.import_tasks: repo.yml
 
-- name: Update dell-system-update
-  ansible.builtin.dnf:
-    state: latest # noqa package-latest
-    name:
-      - dell-system-update
-      - dsucatalog
-      - srvadmin-idracadm7
+- name: Import dsu.yml
+  ansible.builtin.import_tasks: dsu.yml
 
 - name: Import ism.yml
   ansible.builtin.import_tasks: ism.yml
