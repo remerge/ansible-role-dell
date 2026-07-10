@@ -32,6 +32,14 @@
         name: /usr/libexec/dell_dup/Systems-Management_Application_{{ systems_management_version }}/dcism-{{ dcism_version }}.el9.x86_64.rpm
         state: present
 
+- name: Force iSM to use IPv4 for the OS-BMC USB NIC passthrough (CORE-2123)
+  ansible.builtin.lineinfile:
+    path: /opt/dell/srvadmin/iSM/etc/ini/dcismdy64.ini
+    regexp: '^IPV6\s*='
+    line: "IPV6={{ 'FALSE' if dell_ism_force_ipv4 else 'TRUE' }}"
+    state: present
+  notify: Restart iDRAC Service Module
+
 - name: Start iDRAC Service Module
   ansible.builtin.systemd:
     name: dcismeng

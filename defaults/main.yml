@@ -1,1 +1,9 @@
 ---
+# Force the iDRAC Service Module to use IPv4 for the OS-to-iDRAC USB NIC
+# passthrough. On newer iDRAC firmware iSM defaults to connecting over IPv6
+# link-local and then never runs its host-side setup script, so the OS never
+# gets the 169.254.x.x IPv4 on the `idrac` interface. Anything that scrapes the
+# iDRAC over the USB NIC (e.g. idrac-exporter -> idrac.local) then breaks after
+# a reboot until the IP is added by hand. Forcing IPv4 makes iSM assign the
+# host-side address automatically again. See CORE-2123.
+dell_ism_force_ipv4: true

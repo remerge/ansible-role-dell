@@ -3,3 +3,8 @@
   ansible.builtin.command:
     cmd: update-ca-trust
   changed_when: true
+
+- name: Restart iDRAC Service Module
+  ansible.builtin.systemd:
+    name: dcismeng
+    state: restarted
