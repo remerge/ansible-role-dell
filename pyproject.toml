@@ -15,7 +15,7 @@ dev = [
     "ansible-dev-tools==25.10.0",
 ]
 test = [
-    "pytest==9.0.1",
+    "pytest==9.0.3",
 ]
 
 [tool.uv]
