@@ -51,6 +51,12 @@
     patterns:
       - "*.asc"
       - "*.key"
+    # The BDC Hypervisor Engineering key carries SHA1 self-signatures, which
+    # the DEFAULT crypto policy on EL9 rejects on import. It only signs Dell's
+    # hypervisor/BDC packages, not the DSU repos used here (dell-system-update
+    # is signed with 0x1285491434D8786F, firmware DUPs with 0x076B95DB2FFC7F4A).
+    excludes:
+      - 0x274E9C32857A9594.asc
   register: dell_gpg_key_files
 
 - name: Import Dell GPG keys
