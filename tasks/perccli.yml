@@ -1,24 +1,10 @@
 ---
-- name: Download perccli
-  ansible.builtin.get_url:
-    url: "{{ perccli_url }}"
-    dest: "/tmp/{{ perccli_archive }}.tar.gz"
-    checksum: "{{ perccli_checksum }}"
-    mode: "0644"
-  register: perccli_file
-
-- name: Extract perccli
-  ansible.builtin.unarchive:
-    src: "{{ perccli_file.dest }}"
-    dest: /tmp/
-    creates: "/tmp/{{ perccli_rpm }}"
-    remote_src: true
-    mode: "0700"
-
+# The Dell OS independent repository ships perccli, signed with the same key as
+# dell-system-update (0x1285491434D8786F), so no separate download from
+# dl.dell.com is needed.
 - name: Install perccli
   ansible.builtin.dnf:
-    name: "/tmp/{{ perccli_archive }}/Linux/{{ perccli_rpm }}"
-    disable_gpg_check: true
+    name: perccli
     state: present
 
 - name: Link perccli
