@@ -10,6 +10,8 @@ default_install_hook_types:
 default_language_version:
   python: python3.14
 
+# the hooks that rewrite files carry `alias: format'; everything else is a check.
+# `make format' runs the aliased set only, `make check' still runs everything.
 repos:
   # https://github.com/pre-commit/pre-commit-hooks/tags
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -24,28 +26,33 @@ repos:
       - id: check-vcs-permalinks
       - id: destroyed-symlinks
       - id: end-of-file-fixer
+        alias: format
       - id: fix-byte-order-marker
+        alias: format
       - id: forbid-submodules
       - id: trailing-whitespace
+        alias: format
         exclude: "^\\.gitignore$"
 
   # https://github.com/prettier/prettier/tags
   - repo: local
     hooks:
       - id: prettier
+        alias: format
         name: prettier
         entry: prettier --write --list-different --ignore-unknown
         language: node
         types: [text]
         exclude: "^project/"
         additional_dependencies:
-          - "prettier@3.9.5"
+          - "prettier@3.9.9"
 
   # https://github.com/igorshubovych/markdownlint-cli/tags
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: "v0.49.1"
     hooks:
       - id: markdownlint-fix
+        alias: format
         name: markdownlint
 
   # https://github.com/adrienverge/yamllint/tags
@@ -60,6 +67,7 @@ repos:
     rev: "v2.2.0"
     hooks:
       - id: shell-fmt-go
+        alias: format
 
   # https://github.com/koalaman/shellcheck-precommit/tags
   - repo: https://github.com/koalaman/shellcheck-precommit
@@ -77,7 +85,7 @@ repos:
 
   # https://github.com/bridgecrewio/checkov/tags
   - repo: https://github.com/bridgecrewio/checkov
-    rev: "3.3.8"
+    rev: "3.3.20"
     hooks:
       - id: checkov
         name: checkov
@@ -91,18 +99,25 @@ repos:
 
   # https://github.com/ansible/ansible-lint/tags
   - repo: https://github.com/ansible/ansible-lint
-    rev: "v26.6.0"
+    rev: "v26.9.0"
     hooks:
       - id: ansible-lint
         name: ansible-lint
-        entry: uv run ansible-lint -v --force-color --strict
+        # The syntax check parses the configured inventory. Give it an empty
+        # source so linting never queries NetBox or 1Password. The variable is
+        # a comma-separated path list, so a host list like "localhost," would
+        # add the current directory as an inventory directory.
+        # -r adds the repo's own rules and -R keeps the default ones; the profile
+        # unloads every rule it does not list, so enable serial-reboot explicitly.
+        entry: env ANSIBLE_INVENTORY=/dev/null uv run ansible-lint -v --force-color --strict
         language_version: python3.14
         additional_dependencies:
           - "passlib"
 
   # https://github.com/astral-sh/ruff-pre-commit/tags
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.15.22"
+    rev: "v0.16.9"
     hooks:
       - id: ruff-check
       - id: ruff-format
+        alias: format
