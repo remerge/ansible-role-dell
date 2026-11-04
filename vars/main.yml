@@ -1,12 +1,12 @@
 ---
 # https://linux.dell.com/repo/hardware/
 dell_repo_base_url: "https://ftp.gwdg.de/pub/linux/dell/repo"
-dell_repo_version: "DSU_26.08.24"
+dell_repo_version: "DSU_26.10.26"
 
 # https://linux.dell.com/repo/hardware/dsu/os_independent/noarch/
 # systems_management_version is the OpenManage / iDRAC Service Module DUP; the
 # dcism* versions are the RPMs it extracts (dcism-<dcism_version>.el9.x86_64.rpm
 # and dcism-osc-<dcism_osc_version>.rpm).
-systems_management_version: "238XW_LN64_6.1.0.0_A01"
-dcism_osc_version: "8.1.0.0-228"
-dcism_version: "6.1.0.0-4104"
+systems_management_version: "355V2_LN64_6.1.1.0_A00"
+dcism_osc_version: "8.1.1.0-8"
+dcism_version: "6.1.1.0-16"
