@@ -92,7 +92,8 @@ jobs:
         # Pinned to a commit: this step runs with a token that can write.
         uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
         with:
-          branch: dell-update
+          # The org branch-names ruleset only allows ticket or no-ticket/ branches.
+          branch: no-ticket/dell-update
           delete-branch: true
           commit-message: Update Dell repository to ${{ needs.detect.outputs.dell_repo_version }} and iSM to ${{ needs.detect.outputs.ism_version }}
           title: Update Dell repository to ${{ needs.detect.outputs.dell_repo_version }} and iSM to ${{ needs.detect.outputs.ism_version }}
