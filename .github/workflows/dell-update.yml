@@ -35,8 +35,6 @@ jobs:
       systems_management_version: ${{ steps.release.outputs.systems_management_version }}
       dcism_version: ${{ steps.ism.outputs.dcism_version }}
       dcism_osc_version: ${{ steps.ism.outputs.dcism_osc_version }}
-      mirrors_ready: ${{ steps.release.outputs.mirrors_ready }}
-      mirrors_missing: ${{ steps.release.outputs.mirrors_missing }}
     steps:
       - name: Checkout repository
         # https://github.com/actions/checkout/releases
@@ -101,9 +99,6 @@ jobs:
           body: |
             Dell published [${{ needs.detect.outputs.dell_repo_version }}](https://linux.dell.com/repo/hardware/${{ needs.detect.outputs.dell_repo_version }}/). The newest iSM installer in it is `${{ needs.detect.outputs.systems_management_version }}`, with `dcism-${{ needs.detect.outputs.dcism_version }}` and `dcism-osc-${{ needs.detect.outputs.dcism_osc_version }}`; its Dell signature was verified before they were read.
 
-            - Fallback mirrors that have the release: ${{ needs.detect.outputs.mirrors_ready || 'none' }}
-            - Fallback mirrors still missing it: ${{ needs.detect.outputs.mirrors_missing || 'none' }}
-
-            While a mirror lacks the release, hosts cannot fall back to it when linux.dell.com is down.
+            Hosts fall back to the mirrors in their inventory's `dell_repo_base_urls` only once those mirrors carry the release.
 
             This pull request was opened with the workflow token, so the pre-commit checks do not start on their own: close and reopen it to run them. Test the upgrade on one host before rolling it out.

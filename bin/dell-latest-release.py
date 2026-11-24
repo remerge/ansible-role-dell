@@ -64,12 +64,6 @@ def current_release() -> str:
     return match.group(1)
 
 
-def fallback_mirrors(repo: str) -> list[str]:
-    text = (ROLE_DIR / "defaults/main.yml").read_text()
-    urls = re.findall(r"^  - (https://\S+)$", text, re.MULTILINE)
-    return [url for url in urls if url.rstrip("/") != repo.rstrip("/")]
-
-
 def newest_ism(primary: str) -> dict[str, str]:
     packages = []
     for package in re.findall(r"<package .*?</package>", primary, re.DOTALL):
@@ -95,16 +89,6 @@ def newest_ism(primary: str) -> dict[str, str]:
     if not packages:
         sys.exit(f"no package with summary '{ISM_SUMMARY}' found")
     return max(packages, key=lambda p: as_tuple(p["version"]))
-
-
-def has_release(mirror: str, release: str) -> bool:
-    try:
-        return all(
-            fetch(f"{mirror}/hardware/{release}/{repo}/repodata/repomd.xml", attempts=2)
-            for repo in REPOS
-        )
-    except ConnectionError:
-        return False
 
 
 def main() -> None:
@@ -144,9 +128,6 @@ def main() -> None:
     ism = newest_ism(gzip.decompress(primary).decode())
     print(f"newest iSM installer: {ism['name']}", file=sys.stderr)
 
-    mirrors = {
-        mirror: has_release(mirror, latest) for mirror in fallback_mirrors(args.repo)
-    }
     output(
         update="true",
         dell_repo_version=latest,
@@ -158,8 +139,6 @@ def main() -> None:
         ism_url=f"{base}/{latest}/os_independent/{ism['location']}",
         ism_checksum_type=ism["checksum_type"],
         ism_checksum=ism["checksum"],
-        mirrors_ready=" ".join(m for m, ok in mirrors.items() if ok),
-        mirrors_missing=" ".join(m for m, ok in mirrors.items() if not ok),
     )
 
 
