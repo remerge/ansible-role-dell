@@ -1,36 +1,27 @@
 ---
 # Opens a pull request when Dell publishes a new DSU release on linux.dell.com.
 #
-# The detect job finds the newest DSU_* release, picks the newest iDRAC Service
-# Module (iSM) installer in it, checks Dell's GPG signature, and unpacks it to
-# read the dcism RPM versions the role installs. It runs Dell's installer, so it
-# gets a read-only token and no persisted git credentials. The pull-request job
-# only edits vars/main.yml and opens the pull request.
-#
-# Dell is often unreachable: the detect job then logs a warning and the next
-# scheduled run tries again.
+# The detect job runs Dell's iSM installer (bin/dell-ism-versions.sh), so it
+# gets a read-only token and no persisted git credentials. The pull-request
+# job only edits vars/main.yml and opens the pull request. The scripts in bin/
+# also run outside GitHub Actions.
 name: dell-update
 
 on:
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
-  # Dry run (detect only) for changes to this workflow.
+  # Dry run (detect only) for changes to the workflow or its scripts.
   pull_request:
     paths:
       - .github/workflows/dell-update.yml
+      - bin/dell-*
 
 permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
-
-env:
-  DELL_REPO: https://linux.dell.com/repo
-  # Dell Inc., PGRE 2012 <PG_Release_Engineering@Dell.com>, signs the iSM
-  # installer (.BIN.sign), like dell-system-update itself.
-  DELL_DUP_KEY_FINGERPRINT: 42550ABD1E80D7C1BC0BAD851285491434D8786F
 
 jobs:
   detect:
@@ -44,7 +35,8 @@ jobs:
       systems_management_version: ${{ steps.release.outputs.systems_management_version }}
       dcism_version: ${{ steps.ism.outputs.dcism_version }}
       dcism_osc_version: ${{ steps.ism.outputs.dcism_osc_version }}
-      mirrors: ${{ steps.release.outputs.mirrors }}
+      mirrors_ready: ${{ steps.release.outputs.mirrors_ready }}
+      mirrors_missing: ${{ steps.release.outputs.mirrors_missing }}
     steps:
       - name: Checkout repository
         # https://github.com/actions/checkout/releases
@@ -54,110 +46,13 @@ jobs:
 
       - name: Find the latest Dell release
         id: release
-        shell: python3 {0}
+        run: bin/dell-latest-release.py >>"$GITHUB_OUTPUT"
+
+      - name: Install rpm2cpio and cpio
+        if: steps.release.outputs.update == 'true'
         run: |
-          import gzip, os, re, sys, time, urllib.error, urllib.request
-
-          base = os.environ["DELL_REPO"] + "/hardware"
-
-
-          def fetch(url, attempts=5):
-              for attempt in range(1, attempts + 1):
-                  try:
-                      with urllib.request.urlopen(url, timeout=60) as r:
-                          return r.read()
-                  except urllib.error.HTTPError as e:
-                      if e.code == 404:
-                          return None
-                      error = e
-                  except OSError as e:
-                      error = e
-                  print(f"attempt {attempt}/{attempts} for {url} failed: {error}")
-                  time.sleep(10 * attempt)
-              raise ConnectionError(f"{url}: {error}")
-
-
-          def output(**values):
-              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                  for key, value in values.items():
-                      f.write(f"{key}<<EOF\n{value}\nEOF\n")
-
-
-          def as_tuple(version):
-              return tuple(int(p) for p in re.findall(r"\d+", version))
-
-
-          vars_text = open("vars/main.yml").read()
-          current = re.search(r'^dell_repo_version: "(DSU_[\d.]+)"$', vars_text, re.M).group(1)
-          defaults_text = open("defaults/main.yml").read()
-          mirrors = [
-              u for u in re.findall(r"^  - (https://\S+)$", defaults_text, re.M)
-              if u.rstrip("/") != os.environ["DELL_REPO"]
-          ]
-
-          try:
-              index = fetch(f"{base}/").decode()
-              latest = max(set(re.findall(r"DSU_\d+\.\d+\.\d+", index)), key=as_tuple)
-              print(f"current {current}, latest on Dell {latest}")
-              if as_tuple(latest) <= as_tuple(current):
-                  output(update="false")
-                  sys.exit(0)
-
-              # A release directory can appear before its repodata is complete.
-              repos = ["os_independent", "os_dependent/RHEL9_64"]
-              for repo in repos:
-                  if fetch(f"{base}/{latest}/{repo}/repodata/repomd.xml") is None:
-                      print(f"::warning::{latest}/{repo} has no repodata yet")
-                      output(update="false")
-                      sys.exit(0)
-
-              primary = gzip.decompress(
-                  fetch(f"{base}/{latest}/os_independent/repodata/primary.xml.gz")
-              ).decode()
-          except ConnectionError as e:
-              print(f"::warning::linux.dell.com unreachable, retrying on the next run: {e}")
-              output(update="false")
-              sys.exit(0)
-
-          ism = []
-          for package in re.findall(r"<package .*?</package>", primary, re.S):
-              if "iDRAC Service Module Installer" not in package:
-                  continue
-              checksum = re.search(r'<checksum type="(sha256|sha512)"[^>]*>([0-9a-f]+)<', package)
-              ism.append({
-                  "name": re.search(r"<name>([^<]+)</name>", package).group(1),
-                  "version": re.search(r'<version [^>]*ver="([^"]+)"', package).group(1),
-                  "location": re.search(r'<location href="([^"]+)"', package).group(1),
-                  "checksum_type": checksum.group(1),
-                  "checksum": checksum.group(2),
-              })
-          if not ism:
-              sys.exit(f"no iDRAC Service Module installer in {latest}")
-          newest = max(ism, key=lambda p: as_tuple(p["version"]))
-          print(f"newest iSM installer: {newest['name']}")
-
-          mirror_lines = []
-          for mirror in mirrors:
-              try:
-                  ok = all(
-                      fetch(f"{mirror}/hardware/{latest}/{repo}/repodata/repomd.xml", attempts=2)
-                      for repo in repos
-                  )
-              except ConnectionError:
-                  ok = False
-              status = "has the release" if ok else "**does not have the release yet**"
-              mirror_lines.append(f"- {mirror}: {status}")
-
-          output(
-              update="true",
-              dell_repo_version=latest,
-              ism_version=newest["version"],
-              systems_management_version=newest["name"].removeprefix("Systems-Management_Application_"),
-              ism_url=f"{base}/{latest}/os_independent/{newest['location']}",
-              ism_checksum_type=newest["checksum_type"],
-              ism_checksum=newest["checksum"],
-              mirrors="\n".join(mirror_lines),
-          )
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rpm2cpio cpio >/dev/null
 
       - name: Read the dcism versions from the iSM installer
         id: ism
@@ -166,63 +61,8 @@ jobs:
           ISM_URL: ${{ steps.release.outputs.ism_url }}
           ISM_CHECKSUM_TYPE: ${{ steps.release.outputs.ism_checksum_type }}
           ISM_CHECKSUM: ${{ steps.release.outputs.ism_checksum }}
-          ISM_NAME: Systems-Management_Application_${{ steps.release.outputs.systems_management_version }}
-        run: |
-          set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq rpm2cpio cpio >/dev/null
-          work=$(mktemp -d)
-          cd "$work"
-
-          curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors -m 600 -o ism.rpm "$ISM_URL"
-          echo "$ISM_CHECKSUM  ism.rpm" | "${ISM_CHECKSUM_TYPE}sum" -c -
-          rpm2cpio ism.rpm | cpio -idm --quiet
-          bin="usr/libexec/dell_dup/$ISM_NAME.BIN"
-
-          export GNUPGHOME="$work/gnupg"
-          mkdir -m 700 "$GNUPGHOME"
-          curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors -m 120 -o dell.asc \
-            "$DELL_REPO/pgp_pubkeys/0x${DELL_DUP_KEY_FINGERPRINT: -16}.asc"
-          gpg --batch --quiet --import dell.asc
-          gpg --batch --with-colons --list-keys | grep -x "fpr:::::::::$DELL_DUP_KEY_FINGERPRINT:" >/dev/null
-          gpg --batch --status-fd 1 --verify "$bin.sign" "$bin" |
-            grep "^\[GNUPG:\] VALIDSIG $DELL_DUP_KEY_FINGERPRINT " >/dev/null
-
-          # The installer may refuse to run without root; the runner is
-          # disposable and this job holds no write token.
-          chmod +x "$bin"
-          if ! "$bin" --extract "$work/extracted"; then
-            echo "::warning::unprivileged --extract failed, retrying with sudo"
-            sudo "$bin" --extract "$work/extracted"
-          fi
-          find "$work/extracted" -name '*.rpm' -printf '%f\n' | sort | tee rpms.txt
-
-          dcism=$(sed -nE 's/^dcism-([0-9][^ ]*)\.el9\.x86_64\.rpm$/\1/p' rpms.txt)
-          dcism_osc=$(sed -nE 's/^dcism-osc-([0-9][^ ]*)\.rpm$/\1/p' rpms.txt)
-          if [ "$(echo "$dcism" | wc -w)" != 1 ] || [ "$(echo "$dcism_osc" | wc -w)" != 1 ]; then
-            echo "::error::expected one dcism-*.el9.x86_64.rpm and one dcism-osc-*.rpm in $ISM_NAME"
-            exit 1
-          fi
-          echo "dcism_version=$dcism" >>"$GITHUB_OUTPUT"
-          echo "dcism_osc_version=$dcism_osc" >>"$GITHUB_OUTPUT"
-
-      - name: Summarize
-        if: steps.release.outputs.update == 'true'
-        env:
-          DELL_REPO_VERSION: ${{ steps.release.outputs.dell_repo_version }}
-          SYSTEMS_MANAGEMENT_VERSION: ${{ steps.release.outputs.systems_management_version }}
-          DCISM_VERSION: ${{ steps.ism.outputs.dcism_version }}
-          DCISM_OSC_VERSION: ${{ steps.ism.outputs.dcism_osc_version }}
-          MIRRORS: ${{ steps.release.outputs.mirrors }}
-        run: |
-          {
-            echo "dell_repo_version: $DELL_REPO_VERSION"
-            echo "systems_management_version: $SYSTEMS_MANAGEMENT_VERSION"
-            echo "dcism_version: $DCISM_VERSION"
-            echo "dcism_osc_version: $DCISM_OSC_VERSION"
-            echo
-            echo "$MIRRORS"
-          } | tee -a "$GITHUB_STEP_SUMMARY"
+          ISM_NAME: ${{ steps.release.outputs.ism_name }}
+        run: bin/dell-ism-versions.sh "$ISM_URL" "$ISM_CHECKSUM_TYPE" "$ISM_CHECKSUM" "$ISM_NAME" >>"$GITHUB_OUTPUT"
 
   pull-request:
     needs: detect
@@ -237,24 +77,17 @@ jobs:
         uses: actions/checkout@v7.0.1
 
       - name: Update vars/main.yml
-        shell: python3 {0}
         env:
           DELL_REPO_VERSION: ${{ needs.detect.outputs.dell_repo_version }}
           SYSTEMS_MANAGEMENT_VERSION: ${{ needs.detect.outputs.systems_management_version }}
           DCISM_VERSION: ${{ needs.detect.outputs.dcism_version }}
           DCISM_OSC_VERSION: ${{ needs.detect.outputs.dcism_osc_version }}
-        run: |
-          import os, re
-
-          path = "vars/main.yml"
-          text = open(path).read()
-          for key in ["dell_repo_version", "systems_management_version", "dcism_version", "dcism_osc_version"]:
-              text, count = re.subn(
-                  rf'^{key}: ".*"$', f'{key}: "{os.environ[key.upper()]}"', text, flags=re.M
-              )
-              if count != 1:
-                  raise SystemExit(f"{key} found {count} times in {path}")
-          open(path, "w").write(text)
+        run: >-
+          bin/dell-update-vars.py
+          --dell-repo-version "$DELL_REPO_VERSION"
+          --systems-management-version "$SYSTEMS_MANAGEMENT_VERSION"
+          --dcism-version "$DCISM_VERSION"
+          --dcism-osc-version "$DCISM_OSC_VERSION"
 
       - name: Open pull request
         # https://github.com/peter-evans/create-pull-request/releases
@@ -266,12 +99,11 @@ jobs:
           commit-message: Update Dell repository to ${{ needs.detect.outputs.dell_repo_version }} and iSM to ${{ needs.detect.outputs.ism_version }}
           title: Update Dell repository to ${{ needs.detect.outputs.dell_repo_version }} and iSM to ${{ needs.detect.outputs.ism_version }}
           body: |
-            Dell published [${{ needs.detect.outputs.dell_repo_version }}](${{ env.DELL_REPO }}/hardware/${{ needs.detect.outputs.dell_repo_version }}/). The newest iSM installer in it is `${{ needs.detect.outputs.systems_management_version }}`; its Dell signature was verified before the dcism versions were read from it.
+            Dell published [${{ needs.detect.outputs.dell_repo_version }}](https://linux.dell.com/repo/hardware/${{ needs.detect.outputs.dell_repo_version }}/). The newest iSM installer in it is `${{ needs.detect.outputs.systems_management_version }}`, with `dcism-${{ needs.detect.outputs.dcism_version }}` and `dcism-osc-${{ needs.detect.outputs.dcism_osc_version }}`; its Dell signature was verified before they were read.
 
-            Fallback mirrors for this release:
+            - Fallback mirrors that have the release: ${{ needs.detect.outputs.mirrors_ready || 'none' }}
+            - Fallback mirrors still missing it: ${{ needs.detect.outputs.mirrors_missing || 'none' }}
 
-            ${{ needs.detect.outputs.mirrors }}
-
-            While a mirror lacks the release, hosts cannot fall back to it when linux.dell.com is down. Merge once the mirrors have caught up, or accept that risk.
+            While a mirror lacks the release, hosts cannot fall back to it when linux.dell.com is down.
 
             This pull request was opened with the workflow token, so the pre-commit checks do not start on their own: close and reopen it to run them. Test the upgrade on one host before rolling it out.
