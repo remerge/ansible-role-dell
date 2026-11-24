@@ -188,8 +188,13 @@ jobs:
           gpg --batch --status-fd 1 --verify "$bin.sign" "$bin" |
             grep "^\[GNUPG:\] VALIDSIG $DELL_DUP_KEY_FINGERPRINT " >/dev/null
 
+          # The installer may refuse to run without root; the runner is
+          # disposable and this job holds no write token.
           chmod +x "$bin"
-          "$bin" --extract "$work/extracted" >/dev/null
+          if ! "$bin" --extract "$work/extracted"; then
+            echo "::warning::unprivileged --extract failed, retrying with sudo"
+            sudo "$bin" --extract "$work/extracted"
+          fi
           find "$work/extracted" -name '*.rpm' -printf '%f\n' | sort | tee rpms.txt
 
           dcism=$(sed -nE 's/^dcism-([0-9][^ ]*)\.el9\.x86_64\.rpm$/\1/p' rpms.txt)
