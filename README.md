@@ -1,8 +1,23 @@
 # Ansible Role for Dell
 
 Sets up Dell PowerEdge hosts running AlmaLinux 9 for firmware updates and
-in-band iDRAC access. The cluster repositories apply it to the hosts in both
-`manufacturer_dell` and `platform_almalinux` (`playbooks/dell.yaml`).
+in-band iDRAC access.
+
+```yaml
+# requirements.yml
+roles:
+  - name: remerge.dell
+    src: https://github.com/remerge/ansible-role-dell
+    version: "26.11.23"
+```
+
+```yaml
+# playbook
+- hosts: dell_servers
+  become: true
+  roles:
+    - role: remerge.dell
+```
 
 ## What the Role Does
 
@@ -28,11 +43,17 @@ The role does not flash firmware; run `dsu` on a host for that.
 | `systems_management_version`         | `vars/main.yml`     | The pinned iSM installer package.                                                      |
 | `dcism_version`, `dcism_osc_version` | `vars/main.yml`     | The RPM versions inside that installer.                                                |
 
-linux.dell.com is often down, so the inventory lists mirrors after it: the
-template sets `dell_repo_base_urls` in the `manufacturer_dell` group_vars.
+linux.dell.com is often down, so list mirrors after it in your inventory.
 dnf moves to the next URL when a download fails. Every URL must carry the
 pinned DSU release, and mirrors usually get a new release a day or two after
 Dell.
+
+```yaml
+dell_repo_base_urls:
+  - https://linux.dell.com/repo
+  - https://ftp.gwdg.de/pub/linux/dell/repo
+  - https://mirror.chpc.utah.edu/pub/linux.dell.com/repo
+```
 
 The values in `vars/main.yml` belong together and are not meant to be
 overridden; they change through update pull requests.
@@ -63,13 +84,10 @@ Each prints `key=value` lines on standard output and logs to standard error.
 
 Releases are tagged with the DSU release they pin (`26.11.23`); a change to
 the role on the same DSU release gets a suffix (`26.11.23.1`). Create them in
-GitHub with generated release notes. The cluster repositories pin a release
-as `remerge.dell` in `.ansible/requirements.yaml`, which the template manages,
-so a new release reaches hosts through a template update.
+GitHub with generated release notes. Hosts get a new release once the
+`version` in the requirements file moves to it.
 
 ## Development
 
-The repository is generated from
-[remerge/template](https://github.com/remerge/template). Run `make install`
-once, then `make check` for the formatters and linters that pre-commit runs in
-CI.
+Run `make install` once, then `make check` for the formatters and linters
+that pre-commit runs in CI.
