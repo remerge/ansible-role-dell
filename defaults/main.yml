@@ -1,1 +1,8 @@
 ---
+# Base URLs of the Dell Linux repository, without the trailing /hardware/. dnf
+# tries them in order and falls over to the next one when a download fails.
+# linux.dell.com is often down: set this in the inventory to add mirrors after
+# it, or to put a nearer mirror first. Every entry must host dell_repo_version,
+# or a run during a Dell outage fails.
+dell_repo_base_urls:
+  - https://linux.dell.com/repo
