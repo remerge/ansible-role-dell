@@ -28,8 +28,9 @@ concurrency:
 
 env:
   DELL_REPO: https://linux.dell.com/repo
-  # Dell Technologies Inc. <DUP_Infra_Team@Dell.com>, signs the DUP installers.
-  DELL_DUP_KEY_FINGERPRINT: 7099428506A19D98F7DBB41E076B95DB2FFC7F4A
+  # Dell Inc., PGRE 2012 <PG_Release_Engineering@Dell.com>, signs the iSM
+  # installer (.BIN.sign), like dell-system-update itself.
+  DELL_DUP_KEY_FINGERPRINT: 42550ABD1E80D7C1BC0BAD851285491434D8786F
 
 jobs:
   detect:
