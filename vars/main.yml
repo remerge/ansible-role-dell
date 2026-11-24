@@ -1,6 +1,5 @@
 ---
-# https://linux.dell.com/repo/hardware/
-dell_repo_base_url: "https://ftp.gwdg.de/pub/linux/dell/repo"
+# https://linux.dell.com/repo/hardware/ (mirrors: dell_repo_base_urls in defaults)
 dell_repo_version: "DSU_26.10.26"
 
 # https://linux.dell.com/repo/hardware/dsu/os_independent/noarch/

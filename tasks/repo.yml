@@ -16,7 +16,7 @@
     file: dell-system-update
     name: dell-system-update_independent
     description: Dell OS independent
-    baseurl: "{{ dell_repo_base_url }}/hardware/{{ dell_repo_version }}/os_independent/"
+    baseurl: "{{ dell_repo_base_urls | map('regex_replace', '$', '/hardware/' ~ dell_repo_version ~ '/os_independent/') | list }}"
     gpgcheck: true
     exclude: dell-system-update*.i386
 
@@ -25,7 +25,7 @@
     file: dell-system-update
     name: dell-system-update_dependent
     description: Dell OS dependent
-    baseurl: "{{ dell_repo_base_url }}/hardware/{{ dell_repo_version }}/os_dependent/RHEL9_64/"
+    baseurl: "{{ dell_repo_base_urls | map('regex_replace', '$', '/hardware/' ~ dell_repo_version ~ '/os_dependent/RHEL9_64/') | list }}"
     gpgcheck: true
 
 - name: Create /usr/libexec/dell_dup
