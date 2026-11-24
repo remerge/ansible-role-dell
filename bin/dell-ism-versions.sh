@@ -8,8 +8,8 @@
 #   CHECKSUM       the RPM's checksum from the repo metadata
 #   NAME           the package name, e.g. Systems-Management_Application_JDJH3_LN64_6.2.0.0_A00_04
 #
-# Needs Linux with curl, gpg, rpm2cpio, cpio and sudo. The installer may refuse
-# to run without root; run this only on a disposable machine.
+# Needs Linux with curl, gpg, rpm2cpio, cpio and sudo. The installer refuses to
+# run without root, so it runs with sudo; use this only on a disposable machine.
 
 set -euo pipefail
 
@@ -54,11 +54,8 @@ gpg --batch --status-fd 1 --verify "$bin.sign" "$bin" |
     grep "^\[GNUPG:\] VALIDSIG $key_fingerprint " >/dev/null
 
 chmod +x "$bin"
-if ! "$bin" --extract "$work/extracted" >&2; then
-    echo "::warning::unprivileged --extract failed, retrying with sudo" >&2
-    sudo "$bin" --extract "$work/extracted" >&2
-    sudo chown -R "$(id -u):$(id -g)" "$work/extracted"
-fi
+sudo "$bin" --extract "$work/extracted" >&2
+sudo chown -R "$(id -u):$(id -g)" "$work"
 find "$work/extracted" -name '*.rpm' -printf '%f\n' | sort >rpms.txt
 cat rpms.txt >&2
 
