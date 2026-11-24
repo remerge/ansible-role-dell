@@ -1,5 +1,5 @@
 ---
-# https://linux.dell.com/repo/hardware/ (mirrors: dell_repo_base_urls in defaults)
+# https://linux.dell.com/repo/hardware/ (base URLs: dell_repo_base_urls)
 dell_repo_version: "DSU_26.11.23"
 
 # https://linux.dell.com/repo/hardware/dsu/os_independent/noarch/
