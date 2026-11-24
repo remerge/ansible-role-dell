@@ -84,8 +84,8 @@ Each prints `key=value` lines on standard output and logs to standard error.
 
 Releases are tagged with the DSU release they pin (`26.11.23`); a change to
 the role on the same DSU release gets a suffix (`26.11.23.1`). To release,
-run the `release` workflow on `main` (Actions tab, or
-`gh workflow run release --ref main`). It picks the next tag with
+run `make release`, which starts the `release` workflow on `main` (also
+available in the Actions tab). It picks the next tag with
 `bin/dell-next-release.py`, refuses when `main` is already released, and
 creates the release with GitHub's generated notes. Hosts get a new release
 once the `version` in the requirements file moves to it.
